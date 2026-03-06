@@ -7,12 +7,24 @@ spring:
     url: jdbc:mysql://localhost:3306/xiamu
     username: root
     password: "011024"
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 2GB
+      max-request-size: 2GB
 
 server:
   port: 8456
   servlet:
     context-path: /api
 
+# 文件存储配置
+xiamu:
+  storage:
+    root-path: data
+    video-path: ${xiamu.storage.root-path}/videos
+    max-file-size: 2GB
+    allowed-formats: mp4,avi,mkv,webm
 
 # mybatis-plus 配置
 mybatis-plus:
@@ -37,3 +49,4 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.anwen.xiamubackend.controller
+

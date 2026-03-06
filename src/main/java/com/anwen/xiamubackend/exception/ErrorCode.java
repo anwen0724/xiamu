@@ -9,6 +9,10 @@ public enum ErrorCode {
     PARAMS_ERROR(40000, "请求参数错误"),
     NOT_LOGIN_ERROR(40100, "未登录"),
     NO_AUTH_ERROR(40101, "无权限"),
+    // 视频处理模块错误码 (40200-40299)
+    FILE_FORMAT_NOT_SUPPORTED(40200, "文件格式不支持"),
+    FILE_SIZE_EXCEEDED(40201, "文件大小超过限制"),
+    VIDEO_PROCESSING_FAILED(40202, "视频处理失败"),
     NOT_FOUND_ERROR(40400, "请求数据不存在"),
     FORBIDDEN_ERROR(40300, "禁止访问"),
     SYSTEM_ERROR(50000, "系统内部异常"),

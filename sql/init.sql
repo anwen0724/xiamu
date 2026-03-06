@@ -4,3 +4,26 @@ create database if not exists xiamu;
 
 -- switch the database
 use xiamu;
+
+-- create video table
+CREATE TABLE `video` (
+    `id` BIGINT NOT NULL COMMENT '视频ID',
+    `userId` BIGINT DEFAULT NULL COMMENT '用户ID',
+    `title` VARCHAR(255) NOT NULL COMMENT '视频标题',
+    `url` VARCHAR(512) NOT NULL COMMENT '视频文件路径',
+    `duration` BIGINT DEFAULT 0 COMMENT '视频时长（秒）',
+    `fileSize` BIGINT NOT NULL COMMENT '文件大小（字节）',
+    `status` VARCHAR(20) NOT NULL DEFAULT 'WAITING' COMMENT '处理状态: WAITING/PROCESSING/SUCCESS/FAILED',
+    `transcript` TEXT COMMENT '转写文本',
+    `summary` TEXT COMMENT '摘要内容',
+    `chapters` JSON COMMENT '章节数据',
+    `type` VARCHAR(20) NOT NULL COMMENT '视频类型: UPLOAD/URL',
+    `format` VARCHAR(20) NOT NULL COMMENT '视频格式: mp4/avi/mkv/webm',
+    `errorMessage` TEXT COMMENT '错误信息',
+    `createTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除/1已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_userId` (`userId`),
+    KEY `idx_createTime` (`createTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='视频表';
