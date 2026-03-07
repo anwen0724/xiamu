@@ -5,6 +5,7 @@ import com.anwen.xiamubackend.model.enums.VideoTypeEnum;
 import com.anwen.xiamubackend.mapper.VideoMapper;
 import com.anwen.xiamubackend.model.entity.Video;
 import com.anwen.xiamubackend.model.vo.VideoVO;
+import com.anwen.xiamubackend.service.AudioExtractService;
 import com.anwen.xiamubackend.service.VideoService;
 import com.anwen.xiamubackend.utils.FFmpegUtil;
 import com.anwen.xiamubackend.utils.FileStorageUtil;
@@ -25,6 +26,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
     private final FileStorageUtil fileStorageUtil;
     private final FFmpegUtil ffmpegUtil;
+    private final AudioExtractService audioExtractService;
 
     @Override
     public VideoVO uploadVideo(MultipartFile file) {
@@ -52,7 +54,10 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
 
         log.info("视频上传成功: id={}, title={}, duration={}", video.getId(), video.getTitle(), video.getDuration());
 
-        // 5. 返回结果
+        // 5. 异步提取音频
+        audioExtractService.extractAudioAsync(video.getId());
+
+        // 6. 返回结果
         return convertToVO(video);
     }
 

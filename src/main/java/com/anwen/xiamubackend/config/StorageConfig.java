@@ -25,6 +25,11 @@ public class StorageConfig {
     private String videoPath;
 
     /**
+     * 音频文件存储路径
+     */
+    private String audioPath;
+
+    /**
      * 最大文件大小
      */
     private String maxFileSize;

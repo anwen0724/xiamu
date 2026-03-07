@@ -23,6 +23,7 @@ xiamu:
   storage:
     root-path: data
     video-path: ${xiamu.storage.root-path}/videos
+    audio-path: ${xiamu.storage.root-path}/audios
     max-file-size: 2GB
     allowed-formats: mp4,avi,mkv,webm
 

@@ -27,3 +27,7 @@ CREATE TABLE `video` (
     KEY `idx_userId` (`userId`),
     KEY `idx_createTime` (`createTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='视频表';
+
+-- add audioPath field to video table (第二步：音频提取)
+ALTER TABLE `video`
+ADD COLUMN `audioPath` VARCHAR(512) DEFAULT NULL COMMENT '音频文件路径' AFTER `url`;

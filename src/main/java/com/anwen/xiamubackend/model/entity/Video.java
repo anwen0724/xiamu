@@ -40,6 +40,11 @@ public class Video implements Serializable {
     private String url;
 
     /**
+     * 音频文件路径
+     */
+    private String audioPath;
+
+    /**
      * 视频时长（秒）
      */
     private Long duration;
