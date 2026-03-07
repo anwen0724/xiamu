@@ -2,16 +2,17 @@ package com.anwen.xiamubackend.utils;
 
 import com.anwen.xiamubackend.exception.BusinessException;
 import com.anwen.xiamubackend.exception.ErrorCode;
-import com.github.kokorin.jaffree.Rational;
-import com.github.kokorin.jaffree.ffprobe.FFprobe;
-import com.github.kokorin.jaffree.ffprobe.FFprobeResult;
-import com.github.kokorin.jaffree.ffprobe.Stream;
-import com.github.kokorin.jaffree.StreamType;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * FFmpeg 工具类
@@ -21,6 +22,8 @@ import java.util.List;
 @Component
 public class FFmpegUtil {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     /**
      * 获取视频信息
      * @param videoPath 视频文件路径
@@ -28,43 +31,120 @@ public class FFmpegUtil {
      */
     public VideoInfo getVideoInfo(String videoPath) {
         try {
-            FFprobe probe = FFprobe.atPath();
-            FFprobeResult result = probe.setInput(videoPath).execute();
+            log.info("开始获取视频信息: {}", videoPath);
 
-            List<Stream> streams = result.getStreams();
-            if (streams.isEmpty()) {
+            // 检查文件是否存在
+            File videoFile = new File(videoPath);
+            if (!videoFile.exists()) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "视频文件不存在: " + videoPath);
+            }
+
+            // 使用 ProcessBuilder 直接执行 FFprobe 命令
+            ProcessBuilder processBuilder = new ProcessBuilder(
+                "ffprobe",
+                "-loglevel", "quiet",
+                "-print_format", "json",
+                "-show_streams",
+                "-show_format",
+                videoPath
+            );
+            processBuilder.redirectErrorStream(false);
+
+            log.info("执行命令: ffprobe -loglevel quiet -print_format json -show_streams -show_format {}", videoPath);
+
+            Process process = processBuilder.start();
+
+            // 读取标准输出
+            StringBuilder output = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    output.append(line);
+                }
+            }
+
+            // 等待进程结束
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                // 读取错误信息
+                StringBuilder errorOutput = new StringBuilder();
+                try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                    String line;
+                    while ((line = errorReader.readLine()) != null) {
+                        errorOutput.append(line).append("\n");
+                    }
+                }
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "FFprobe 执行失败，退出码: " + exitCode + ", 错误信息: " + errorOutput);
+            }
+
+            String jsonOutput = output.toString();
+            log.info("FFprobe 输出长度: {}", jsonOutput.length());
+
+            if (jsonOutput.isEmpty()) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "FFprobe 输出为空");
+            }
+
+            // 解析 JSON
+            JsonNode rootNode = objectMapper.readTree(jsonOutput);
+
+            // 解析格式信息（时长）
+            VideoInfo info = new VideoInfo();
+            JsonNode formatNode = rootNode.get("format");
+            if (formatNode != null && formatNode.has("duration")) {
+                String durationStr = formatNode.get("duration").asText();
+                try {
+                    info.setDuration((long) Double.parseDouble(durationStr));
+                } catch (NumberFormatException e) {
+                    log.warn("解析时长失败: {}", durationStr);
+                }
+            }
+
+            // 解析流信息
+            JsonNode streamsNode = rootNode.get("streams");
+            if (streamsNode == null || !streamsNode.isArray() || streamsNode.size() == 0) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "无法获取视频信息：视频流为空");
             }
 
             // 查找视频流
-            Stream videoStream = streams.stream()
-                .filter(s -> s.getCodecType() == StreamType.VIDEO)
-                .findFirst()
-                .orElse(streams.get(0));
+            JsonNode videoStream = null;
+            for (JsonNode stream : streamsNode) {
+                if (stream.has("codec_type") && "video".equals(stream.get("codec_type").asText())) {
+                    videoStream = stream;
+                    break;
+                }
+            }
 
-            VideoInfo info = new VideoInfo();
-
-            // 获取时长（秒）
-            Float duration = result.getFormat().getDuration();
-            if (duration != null) {
-                info.setDuration(duration.longValue());
+            if (videoStream == null) {
+                videoStream = streamsNode.get(0);
             }
 
             // 获取格式（编码格式）
-            String codec = videoStream.getCodecName();
-            if (codec != null) {
-                info.setFormat(codec);
+            if (videoStream.has("codec_name")) {
+                info.setFormat(videoStream.get("codec_name").asText());
             }
 
             // 获取分辨率
-            info.setWidth(videoStream.getWidth());
-            info.setHeight(videoStream.getHeight());
+            if (videoStream.has("width")) {
+                info.setWidth(videoStream.get("width").asInt());
+            }
+            if (videoStream.has("height")) {
+                info.setHeight(videoStream.get("height").asInt());
+            }
 
             // 获取帧率
-            Rational frameRate = videoStream.getRFrameRate();
-            if (frameRate != null) {
-                double fps = (double) frameRate.getNumerator() / frameRate.getDenominator();
-                info.setFrameRate(String.format("%.2f", fps));
+            if (videoStream.has("r_frame_rate")) {
+                String fpsStr = videoStream.get("r_frame_rate").asText();
+                String[] parts = fpsStr.split("/");
+                if (parts.length == 2) {
+                    try {
+                        double numerator = Double.parseDouble(parts[0]);
+                        double denominator = Double.parseDouble(parts[1]);
+                        double fps = numerator / denominator;
+                        info.setFrameRate(String.format("%.2f", fps));
+                    } catch (NumberFormatException e) {
+                        log.warn("解析帧率失败: {}", fpsStr);
+                    }
+                }
             }
 
             log.info("视频信息获取成功: duration={}s, format={}, {}x{}, fps={}",
