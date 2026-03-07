@@ -4,6 +4,7 @@ import com.anwen.xiamubackend.model.enums.VideoStatusEnum;
 import com.anwen.xiamubackend.model.entity.Video;
 import com.anwen.xiamubackend.mapper.VideoMapper;
 import com.anwen.xiamubackend.service.AudioExtractService;
+import com.anwen.xiamubackend.service.WhisperTranscriptionService;
 import com.anwen.xiamubackend.utils.AudioExtractUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class AudioExtractServiceImpl implements AudioExtractService {
 
     private final VideoMapper videoMapper;
     private final AudioExtractUtil audioExtractUtil;
+    private final WhisperTranscriptionService whisperTranscriptionService;
 
     /**
      * 异步提取音频
@@ -57,6 +59,9 @@ public class AudioExtractServiceImpl implements AudioExtractService {
             videoMapper.updateById(video);
 
             log.info("音频提取成功: videoId={}, audioPath={}", videoId, audioPath);
+
+            // 6. 触发 ASR 转写
+            whisperTranscriptionService.transcribeAsync(videoId, audioPath);
 
         } catch (Exception e) {
             log.error("音频提取失败: videoId={}", videoId, e);

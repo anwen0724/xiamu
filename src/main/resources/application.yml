@@ -26,6 +26,11 @@ xiamu:
     audio-path: ${xiamu.storage.root-path}/audios
     max-file-size: 2GB
     allowed-formats: mp4,avi,mkv,webm
+  # Whisper 转录配置
+  whisper:
+    mode: local                 # 转录模式: local（本地模型）/ api（API 调用）
+    python-path: python          # Python 可执行文件路径
+    script-path: scripts/whisper_openai.py  # 转录脚本路径
 
 # mybatis-plus 配置
 mybatis-plus:
