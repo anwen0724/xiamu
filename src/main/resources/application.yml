@@ -1,24 +1,29 @@
 spring:
   application:
     name: xiamu-backend
-  # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/xiamu
     username: root
     password: "011024"
-  # 文件上传配置
   servlet:
     multipart:
       max-file-size: 2GB
       max-request-size: 2GB
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4.1-mini}
+          temperature: 0.3
 
 server:
   port: 8456
   servlet:
     context-path: /api
 
-# 文件存储配置
 xiamu:
   storage:
     root-path: data
@@ -26,25 +31,23 @@ xiamu:
     audio-path: ${xiamu.storage.root-path}/audios
     max-file-size: 2GB
     allowed-formats: mp4,avi,mkv,webm
-  # Whisper 转录配置
   whisper:
-    mode: local                 # 转录模式: local（本地模型）/ api（API 调用）
-    python-path: python          # Python 可执行文件路径
-    script-path: scripts/whisper_openai.py  # 转录脚本路径
+    mode: local
+    python-path: python
+    script-path: scripts/whisper_openai.py
+  ai:
+    summary-max-chars: 12000
 
-# mybatis-plus 配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
-    # 仅在开发环境开启日志
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
-      logic-delete-field: isDelete # 全局逻辑删除的实体字段名
-      logic-delete-value: 1 # 逻辑已删除值（默认为 1）
-      logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 
-# 接口文档配置
 knife4j:
   enable: true
   openapi:
@@ -55,4 +58,3 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.anwen.xiamubackend.controller
-
