@@ -39,13 +39,8 @@ async function handleLogout() {
   await router.push('/')
 }
 
-function openVideo(item: { id: EntityId; status: string }) {
-  if (item.status === 'SUCCESS') {
-    void router.push(`/video/result/${item.id}`)
-    return
-  }
-
-  void router.push(`/video/status/${item.id}`)
+function openVideo(item: { id: EntityId }) {
+  void router.push(`/video/${item.id}`)
 }
 </script>
 
@@ -66,7 +61,7 @@ function openVideo(item: { id: EntityId; status: string }) {
 
     <section class="dashboard-grid">
       <aside class="panel side-panel">
-        <strong>快速入口</strong>
+        <strong>快捷入口</strong>
         <button class="menu-item active" type="button">最近处理</button>
         <button class="menu-item" type="button">全部视频</button>
         <button class="menu-item" type="button">我的笔记</button>
@@ -75,7 +70,7 @@ function openVideo(item: { id: EntityId; status: string }) {
       <section class="content-column">
         <VideoUploadPanel
           title="上传新视频"
-          description="这里已经接入真实上传接口。上传成功后会自动跳到处理状态页。"
+          description="这里已经接入真实上传接口。上传成功后会直接进入统一详情页。"
           cta-label="选择视频并上传"
         />
 
@@ -110,11 +105,11 @@ function openVideo(item: { id: EntityId; status: string }) {
                 <h3>{{ item.title }}</h3>
                 <p>{{ formatDuration(item.duration) }} · {{ formatRelativeDate(item.createTime) }}</p>
                 <p v-if="item.summary" class="summary-text">{{ item.summary }}</p>
-                <p v-else class="summary-placeholder">摘要尚未生成，先查看处理状态。</p>
+                <p v-else class="summary-placeholder">摘要尚未生成，先查看当前处理进度。</p>
               </div>
               <div class="card-actions">
                 <button type="button" @click="openVideo(item)">
-                  {{ item.status === 'SUCCESS' ? '查看结果' : '查看状态' }}
+                  {{ item.status === 'SUCCESS' ? '查看结果' : '查看进度' }}
                 </button>
               </div>
             </article>
@@ -322,13 +317,22 @@ function openVideo(item: { id: EntityId; status: string }) {
   color: var(--text-muted);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .list-head {
+@media (max-width: 640px) {
+  .list-head,
+  .video-card,
+  .user-strip {
     flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-actions {
+    width: 100%;
   }
 }
 </style>

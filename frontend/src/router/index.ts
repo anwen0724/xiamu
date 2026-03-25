@@ -4,8 +4,7 @@ import DashboardPage from '../pages/dashboard/DashboardPage.vue'
 import HomePage from '../pages/home/HomePage.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
 import RegisterPage from '../pages/auth/RegisterPage.vue'
-import VideoResultPage from '../pages/video-result/VideoResultPage.vue'
-import VideoStatusPage from '../pages/video-status/VideoStatusPage.vue'
+import VideoDetailPage from '../pages/video-detail/VideoDetailPage.vue'
 import { pinia } from '../stores'
 import { useAuthStore } from '../stores/auth'
 
@@ -49,17 +48,29 @@ const router = createRouter({
       },
     },
     {
+      path: '/video/:id',
+      name: 'video-detail',
+      component: VideoDetailPage,
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
       path: '/video/status/:id',
-      name: 'video-status',
-      component: VideoStatusPage,
+      redirect: (to) => ({
+        name: 'video-detail',
+        params: { id: to.params.id },
+      }),
       meta: {
         requiresAuth: true,
       },
     },
     {
       path: '/video/result/:id',
-      name: 'video-result',
-      component: VideoResultPage,
+      redirect: (to) => ({
+        name: 'video-detail',
+        params: { id: to.params.id },
+      }),
       meta: {
         requiresAuth: true,
       },

@@ -11,9 +11,12 @@ CREATE TABLE `video` (
     `userId` BIGINT DEFAULT NULL COMMENT '用户ID',
     `title` VARCHAR(255) NOT NULL COMMENT '视频标题',
     `url` VARCHAR(512) NOT NULL COMMENT '视频文件路径',
+    `audioPath` VARCHAR(512) DEFAULT NULL COMMENT '音频文件路径',
     `duration` BIGINT DEFAULT 0 COMMENT '视频时长（秒）',
     `fileSize` BIGINT NOT NULL COMMENT '文件大小（字节）',
     `status` VARCHAR(20) NOT NULL DEFAULT 'WAITING' COMMENT '处理状态: WAITING/PROCESSING/SUCCESS/FAILED',
+    `stage` VARCHAR(40) NOT NULL DEFAULT 'QUEUED' COMMENT '处理阶段: QUEUED/EXTRACTING_AUDIO/TRANSCRIBING/GENERATING_SUMMARY/GENERATING_CHAPTERS/COMPLETED/FAILED',
+    `stageMessage` VARCHAR(255) DEFAULT NULL COMMENT '当前阶段说明',
     `transcript` TEXT COMMENT '转写文本',
     `summary` TEXT COMMENT '摘要内容',
     `chapters` JSON COMMENT '章节数据',
@@ -22,15 +25,16 @@ CREATE TABLE `video` (
     `errorMessage` TEXT COMMENT '错误信息',
     `createTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除/1已删除',
+    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除 1已删除',
     PRIMARY KEY (`id`),
     KEY `idx_userId` (`userId`),
     KEY `idx_createTime` (`createTime`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='视频表';
 
--- add audioPath field to video table (第二步：音频提取)
+
 ALTER TABLE `video`
-ADD COLUMN `audioPath` VARCHAR(512) DEFAULT NULL COMMENT '音频文件路径' AFTER `url`;
+    ADD COLUMN `stage` VARCHAR(40) NOT NULL DEFAULT 'QUEUED' COMMENT '处理阶段: QUEUED/EXTRACTING_AUDIO/TRANSCRIBING/GENERATING_SUMMARY/GENERATING_CHAPTERS/COMPLETED/FAILED' AFTER `status`,
+    ADD COLUMN `stageMessage` VARCHAR(255) DEFAULT NULL COMMENT '当前阶段说明' AFTER `stage`;
 
 -- create user table
 CREATE TABLE IF NOT EXISTS `user` (
@@ -40,7 +44,7 @@ CREATE TABLE IF NOT EXISTS `user` (
     `userName` VARCHAR(128) NOT NULL COMMENT '用户名',
     `createTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除/1已删除',
+    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除 1已删除',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_userAccount` (`userAccount`),
     KEY `idx_user_createTime` (`createTime`)
@@ -56,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `note` (
     `timeSeconds` INT DEFAULT NULL COMMENT '关联视频时间点（秒）',
     `createTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除/1已删除',
+    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除 1已删除',
     PRIMARY KEY (`id`),
     KEY `idx_note_userId` (`userId`),
     KEY `idx_note_videoId` (`videoId`),

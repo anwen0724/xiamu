@@ -4,8 +4,9 @@ import com.anwen.xiamubackend.ai.service.AiChapterService;
 import com.anwen.xiamubackend.ai.service.AiSummaryService;
 import com.anwen.xiamubackend.mapper.VideoMapper;
 import com.anwen.xiamubackend.model.entity.Video;
-import com.anwen.xiamubackend.model.enums.VideoStatusEnum;
+import com.anwen.xiamubackend.model.enums.VideoProcessStageEnum;
 import com.anwen.xiamubackend.model.vo.VideoChapterVO;
+import com.anwen.xiamubackend.service.VideoProcessStateService;
 import com.anwen.xiamubackend.service.WhisperTranscriptionService;
 import com.anwen.xiamubackend.strategy.TranscriptionStrategy;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,7 +32,7 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
     private final AiSummaryService aiSummaryService;
     private final AiChapterService aiChapterService;
     private final ObjectMapper objectMapper;
-
+    private final VideoProcessStateService videoProcessStateService;
     private final TranscriptionStrategy localModelStrategy;
     private final TranscriptionStrategy apiCallStrategy;
 
@@ -51,18 +52,19 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
 
         if (audioPath == null || audioPath.isEmpty()) {
             log.error("音频路径为空: videoId={}", videoId);
-            updateFailed(video, "音频路径为空");
+            updateFailed(videoId, VideoProcessStageEnum.TRANSCRIBING, "音频路径为空");
             return;
         }
 
         File audioFile = new File(audioPath);
         if (!audioFile.exists()) {
             log.error("音频文件不存在: videoId={}, audioPath={}", videoId, audioPath);
-            updateFailed(video, "音频文件不存在");
+            updateFailed(videoId, VideoProcessStageEnum.TRANSCRIBING, "音频文件不存在");
             return;
         }
 
-        updateStatus(video, VideoStatusEnum.PROCESSING.getCode());
+        VideoProcessStageEnum currentStage = VideoProcessStageEnum.TRANSCRIBING;
+        videoProcessStateService.updateProcessingStage(videoId, currentStage, null);
 
         try {
             TranscriptionStrategy strategy = getStrategy();
@@ -83,13 +85,15 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
 
             log.info("转写成功: videoId={}, language={}, textLength={}", videoId, language, transcript.length());
 
-            video.setTranscript(transcript);
-            video.setStatus(VideoStatusEnum.PROCESSING.getCode());
-            videoMapper.updateById(video);
+            currentStage = VideoProcessStageEnum.GENERATING_SUMMARY;
+            videoProcessStateService.updateProcessingStage(videoId, currentStage, currentVideo ->
+                    currentVideo.setTranscript(transcript));
 
             String summary = aiSummaryService.generateSummary(transcript);
-            video.setSummary(summary);
-            videoMapper.updateById(video);
+
+            currentStage = VideoProcessStageEnum.GENERATING_CHAPTERS;
+            videoProcessStateService.updateProcessingStage(videoId, currentStage, currentVideo ->
+                    currentVideo.setSummary(summary));
 
             List<VideoChapterVO> chapters = List.of();
             boolean chapterGenerated = false;
@@ -101,19 +105,18 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
                         videoId, chapterException.getMessage(), chapterException);
             }
 
-            video.setChapters(objectMapper.writeValueAsString(chapters));
-            video.setStatus(VideoStatusEnum.SUCCESS.getCode());
-            video.setErrorMessage(null);
-            videoMapper.updateById(video);
+            String chaptersJson = objectMapper.writeValueAsString(chapters);
+            videoProcessStateService.markSuccess(videoId, currentVideo -> currentVideo.setChapters(chaptersJson));
 
             if (chapterGenerated) {
-                log.info("摘要和章节生成成功: videoId={}, summaryLength={}, chapterCount={}", videoId, summary.length(), chapters.size());
+                log.info("摘要和章节生成成功: videoId={}, summaryLength={}, chapterCount={}",
+                        videoId, summary.length(), chapters.size());
             } else {
                 log.info("摘要生成成功，章节降级为空列表: videoId={}, summaryLength={}", videoId, summary.length());
             }
         } catch (Exception e) {
             log.error("转写或摘要生成失败: videoId={}", videoId, e);
-            updateFailed(video, "转写或AI 内容生成失败: " + e.getMessage());
+            updateFailed(videoId, currentStage, "转写或 AI 内容生成失败: " + e.getMessage());
         }
     }
 
@@ -129,14 +132,7 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
         }
     }
 
-    private void updateStatus(Video video, String status) {
-        video.setStatus(status);
-        videoMapper.updateById(video);
-    }
-
-    private void updateFailed(Video video, String errorMessage) {
-        video.setStatus(VideoStatusEnum.FAILED.getCode());
-        video.setErrorMessage(errorMessage);
-        videoMapper.updateById(video);
+    private void updateFailed(Long videoId, VideoProcessStageEnum stage, String errorMessage) {
+        videoProcessStateService.markFailed(videoId, stage, errorMessage);
     }
 }

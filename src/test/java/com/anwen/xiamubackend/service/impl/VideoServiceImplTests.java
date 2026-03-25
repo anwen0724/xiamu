@@ -6,6 +6,7 @@ import com.anwen.xiamubackend.model.enums.VideoStatusEnum;
 import com.anwen.xiamubackend.model.vo.VideoProcessStatusVO;
 import com.anwen.xiamubackend.model.vo.VideoResultVO;
 import com.anwen.xiamubackend.service.AudioExtractService;
+import com.anwen.xiamubackend.service.VideoProcessStateService;
 import com.anwen.xiamubackend.service.WhisperTranscriptionService;
 import com.anwen.xiamubackend.utils.FFmpegUtil;
 import com.anwen.xiamubackend.utils.FileStorageUtil;
@@ -39,6 +40,9 @@ class VideoServiceImplTests {
     private WhisperTranscriptionService whisperTranscriptionService;
 
     @Mock
+    private VideoProcessStateService videoProcessStateService;
+
+    @Mock
     private VideoMapper videoMapper;
 
     private VideoServiceImpl videoService;
@@ -50,6 +54,7 @@ class VideoServiceImplTests {
                 ffmpegUtil,
                 audioExtractService,
                 whisperTranscriptionService,
+                videoProcessStateService,
                 videoMapper,
                 new ObjectMapper());
     }
@@ -77,17 +82,27 @@ class VideoServiceImplTests {
         Video video = new Video();
         video.setId(1L);
         video.setUserId(10L);
+        video.setTitle("demo");
+        video.setDuration(180L);
         video.setStatus(VideoStatusEnum.PROCESSING.getCode());
         video.setTranscript("hello");
         video.setSummary(null);
         video.setChapters("");
         when(videoMapper.selectById(1L)).thenReturn(video);
 
-        VideoProcessStatusVO statusVO = videoService.getVideoStatus(1L, 10L);
+        VideoProcessStatusVO statusVO = new VideoProcessStatusVO();
+        statusVO.setId(1L);
+        statusVO.setStatus(VideoStatusEnum.PROCESSING.getCode());
+        statusVO.setHasTranscript(true);
+        statusVO.setHasSummary(false);
+        statusVO.setHasChapters(false);
+        when(videoProcessStateService.toStatusVO(video)).thenReturn(statusVO);
 
-        assertTrue(statusVO.isHasTranscript());
-        assertFalse(statusVO.isHasSummary());
-        assertFalse(statusVO.isHasChapters());
+        VideoProcessStatusVO result = videoService.getVideoStatus(1L, 10L);
+
+        assertTrue(result.isHasTranscript());
+        assertFalse(result.isHasSummary());
+        assertFalse(result.isHasChapters());
     }
 
     @Test
@@ -99,11 +114,11 @@ class VideoServiceImplTests {
         video.setUrl("video.mp4");
         video.setAudioPath("audio.mp3");
         when(videoMapper.selectById(1L)).thenReturn(video);
-        when(videoMapper.updateById(any(Video.class))).thenReturn(1);
 
         boolean result = videoService.retryVideo(1L, 10L);
 
         assertTrue(result);
+        verify(videoProcessStateService).updateQueued(any(Long.class), any());
         verify(whisperTranscriptionService).transcribeAsync(1L, "audio.mp3");
     }
 }

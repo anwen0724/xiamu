@@ -4,6 +4,7 @@ import com.anwen.xiamubackend.exception.ErrorCode;
 import com.anwen.xiamubackend.exception.ThrowUtils;
 import com.anwen.xiamubackend.mapper.VideoMapper;
 import com.anwen.xiamubackend.model.entity.Video;
+import com.anwen.xiamubackend.model.enums.VideoProcessStageEnum;
 import com.anwen.xiamubackend.model.enums.VideoStatusEnum;
 import com.anwen.xiamubackend.model.enums.VideoTypeEnum;
 import com.anwen.xiamubackend.model.vo.VideoChapterVO;
@@ -12,6 +13,7 @@ import com.anwen.xiamubackend.model.vo.VideoProcessStatusVO;
 import com.anwen.xiamubackend.model.vo.VideoResultVO;
 import com.anwen.xiamubackend.model.vo.VideoVO;
 import com.anwen.xiamubackend.service.AudioExtractService;
+import com.anwen.xiamubackend.service.VideoProcessStateService;
 import com.anwen.xiamubackend.service.VideoService;
 import com.anwen.xiamubackend.service.WhisperTranscriptionService;
 import com.anwen.xiamubackend.utils.FFmpegUtil;
@@ -43,6 +45,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
     private final FFmpegUtil ffmpegUtil;
     private final AudioExtractService audioExtractService;
     private final WhisperTranscriptionService whisperTranscriptionService;
+    private final VideoProcessStateService videoProcessStateService;
     private final VideoMapper videoMapper;
     private final ObjectMapper objectMapper;
 
@@ -64,6 +67,8 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         video.setDuration(videoInfo.getDuration());
         video.setFileSize(file.getSize());
         video.setStatus(VideoStatusEnum.WAITING.getCode());
+        video.setStage(VideoProcessStageEnum.QUEUED.getCode());
+        video.setStageMessage(VideoProcessStageEnum.QUEUED.getDesc());
         video.setType(VideoTypeEnum.UPLOAD.getCode());
 
         // 获取文件扩展名作为格式
@@ -94,14 +99,7 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
     @Override
     public VideoProcessStatusVO getVideoStatus(Long videoId, Long userId) {
         Video video = getOwnedVideo(videoId, userId);
-        VideoProcessStatusVO statusVO = new VideoProcessStatusVO();
-        statusVO.setId(video.getId());
-        statusVO.setStatus(video.getStatus());
-        statusVO.setErrorMessage(video.getErrorMessage());
-        statusVO.setHasTranscript(StringUtils.hasText(video.getTranscript()));
-        statusVO.setHasSummary(StringUtils.hasText(video.getSummary()));
-        statusVO.setHasChapters(StringUtils.hasText(video.getChapters()));
-        return statusVO;
+        return videoProcessStateService.toStatusVO(video);
     }
 
     @Override
@@ -134,11 +132,11 @@ public class VideoServiceImpl extends ServiceImpl<VideoMapper, Video> implements
         ThrowUtils.throwIf(!StringUtils.hasText(video.getUrl()) && !StringUtils.hasText(video.getAudioPath()),
                 ErrorCode.OPERATION_ERROR, "缺少可重试的源文件");
 
-        video.setStatus(VideoStatusEnum.WAITING.getCode());
-        video.setErrorMessage(null);
-        video.setSummary(null);
-        video.setChapters(null);
-        videoMapper.updateById(video);
+        videoProcessStateService.updateQueued(videoId, currentVideo -> {
+            currentVideo.setTranscript(null);
+            currentVideo.setSummary(null);
+            currentVideo.setChapters(null);
+        });
 
         if (StringUtils.hasText(video.getAudioPath())) {
             whisperTranscriptionService.transcribeAsync(video.getId(), video.getAudioPath());

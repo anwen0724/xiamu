@@ -57,7 +57,7 @@ async function onFileChange(event: Event) {
 
   try {
     const result = await uploadVideo(file)
-    await router.push(`/video/status/${result.id}`)
+    await router.push(`/video/${result.id}`)
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : '上传失败，请稍后重试'
   } finally {
@@ -78,7 +78,7 @@ async function onFileChange(event: Event) {
     <div class="dropzone" @click="pickFile">
       <div class="dropzone-meta">
         <span class="dropzone-chip">MP4</span>
-        <span class="dropzone-chip muted">状态页自动跳转</span>
+        <span class="dropzone-chip muted">详情页实时展示处理进度</span>
       </div>
       <span class="dropzone-label">拖拽 MP4 文件到此处</span>
       <span class="dropzone-tip">或点击选择本地视频文件</span>

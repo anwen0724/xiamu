@@ -60,6 +60,16 @@ public class Video implements Serializable {
     private String status;
 
     /**
+     * 当前处理阶段。
+     */
+    private String stage;
+
+    /**
+     * 当前处理阶段说明。
+     */
+    private String stageMessage;
+
+    /**
      * 转写文本
      */
     private String transcript;

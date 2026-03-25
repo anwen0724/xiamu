@@ -47,7 +47,18 @@ export async function getVideoStatus(videoId: EntityId) {
   return unwrapResponse(data)
 }
 
+export function openVideoStatusStream(videoId: EntityId) {
+  return new EventSource(`/api/video/status/stream/${videoId}`, {
+    withCredentials: true,
+  })
+}
+
 export async function getVideoResult(videoId: EntityId) {
   const { data } = await apiClient.get<BaseResponse<VideoResultVO>>(`/video/result/${videoId}`)
+  return unwrapResponse(data)
+}
+
+export async function retryVideo(videoId: EntityId) {
+  const { data } = await apiClient.post<BaseResponse<boolean>>(`/video/retry/${videoId}`)
   return unwrapResponse(data)
 }

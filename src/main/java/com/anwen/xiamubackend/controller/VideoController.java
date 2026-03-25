@@ -9,6 +9,7 @@ import com.anwen.xiamubackend.model.vo.VideoDashboardVO;
 import com.anwen.xiamubackend.model.vo.VideoProcessStatusVO;
 import com.anwen.xiamubackend.model.vo.VideoResultVO;
 import com.anwen.xiamubackend.model.vo.VideoVO;
+import com.anwen.xiamubackend.service.VideoProcessSseService;
 import com.anwen.xiamubackend.service.UserService;
 import com.anwen.xiamubackend.service.VideoService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * 视频管理 Controller
@@ -36,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class VideoController {
 
     private final VideoService videoService;
+    private final VideoProcessSseService videoProcessSseService;
     private final UserService userService;
 
     @PostMapping("/upload")
@@ -59,6 +63,14 @@ public class VideoController {
     public BaseResponse<VideoProcessStatusVO> getVideoStatus(@PathVariable Long videoId, HttpServletRequest request) {
         User loginUser = userService.getLoginUser(request);
         return ResultUtils.success(videoService.getVideoStatus(videoId, loginUser.getId()));
+    }
+
+    @GetMapping(path = "/status/stream/{videoId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "订阅视频处理状态流")
+    public SseEmitter streamVideoStatus(@PathVariable Long videoId, HttpServletRequest request) {
+        User loginUser = userService.getLoginUser(request);
+        VideoProcessStatusVO statusVO = videoService.getVideoStatus(videoId, loginUser.getId());
+        return videoProcessSseService.subscribe(videoId, statusVO);
     }
 
     @GetMapping("/my/page")

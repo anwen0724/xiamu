@@ -19,28 +19,27 @@ export function useDashboardVideosQuery(status: MaybeRefOrGetter<string>) {
   })
 }
 
-export function useVideoStatusQuery(videoId: MaybeRefOrGetter<EntityId>, enabled = true) {
+export function useVideoStatusQuery(
+  videoId: MaybeRefOrGetter<EntityId>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
   return useQuery({
     queryKey: computed(() => ['video-status', toValue(videoId)]),
     queryFn: () => getVideoStatus(toValue(videoId)),
-    enabled: computed(() => enabled && !!toValue(videoId)),
-    refetchInterval: (query) => {
-      if (query.state.error) {
-        return false
-      }
-      const status = query.state.data?.status
-      return status === 'SUCCESS' || status === 'FAILED' ? false : 3000
-    },
+    enabled: computed(() => toValue(enabled) && !!toValue(videoId)),
     refetchOnWindowFocus: false,
     retry: false,
   })
 }
 
-export function useVideoResultQuery(videoId: MaybeRefOrGetter<EntityId>, enabled = true) {
+export function useVideoResultQuery(
+  videoId: MaybeRefOrGetter<EntityId>,
+  enabled: MaybeRefOrGetter<boolean> = true,
+) {
   return useQuery({
     queryKey: computed(() => ['video-result', toValue(videoId)]),
     queryFn: () => getVideoResult(toValue(videoId)),
-    enabled: computed(() => enabled && !!toValue(videoId)),
+    enabled: computed(() => toValue(enabled) && !!toValue(videoId)),
     refetchOnWindowFocus: false,
     retry: false,
   })

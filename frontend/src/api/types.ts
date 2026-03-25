@@ -46,8 +46,13 @@ export type VideoDashboardVO = {
 
 export type VideoProcessStatusVO = {
   id: EntityId
+  title: string
+  duration: number
   status: string
+  stage: string
+  stageMessage: string | null
   errorMessage: string | null
+  updateTime: string | null
   hasTranscript: boolean
   hasSummary: boolean
   hasChapters: boolean
