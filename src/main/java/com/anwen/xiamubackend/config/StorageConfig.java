@@ -38,4 +38,24 @@ public class StorageConfig {
      * 允许的视频格式
      */
     private List<String> allowedFormats;
+
+    /**
+     * 是否开启文件清理任务。
+     */
+    private Boolean cleanupEnabled = true;
+
+    /**
+     * 清理任务 cron。
+     */
+    private String cleanupCron;
+
+    /**
+     * 原视频保留天数。
+     */
+    private Integer videoRetentionDays = 7;
+
+    /**
+     * 音频保留小时数。
+     */
+    private Integer audioRetentionHours = 24;
 }

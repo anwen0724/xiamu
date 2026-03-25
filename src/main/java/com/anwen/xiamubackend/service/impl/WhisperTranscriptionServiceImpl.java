@@ -1,9 +1,11 @@
 package com.anwen.xiamubackend.service.impl;
 
+import com.anwen.xiamubackend.ai.service.AiChapterService;
 import com.anwen.xiamubackend.ai.service.AiSummaryService;
 import com.anwen.xiamubackend.mapper.VideoMapper;
 import com.anwen.xiamubackend.model.entity.Video;
 import com.anwen.xiamubackend.model.enums.VideoStatusEnum;
+import com.anwen.xiamubackend.model.vo.VideoChapterVO;
 import com.anwen.xiamubackend.service.WhisperTranscriptionService;
 import com.anwen.xiamubackend.strategy.TranscriptionStrategy;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -15,6 +17,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Whisper 转写服务实现。
@@ -26,7 +29,8 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
 
     private final VideoMapper videoMapper;
     private final AiSummaryService aiSummaryService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AiChapterService aiChapterService;
+    private final ObjectMapper objectMapper;
 
     private final TranscriptionStrategy localModelStrategy;
     private final TranscriptionStrategy apiCallStrategy;
@@ -71,6 +75,7 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
 
             String transcript = jsonNode.path("text").asText("");
             String language = jsonNode.path("language").asText("");
+            String segmentsJson = jsonNode.path("segments").toString();
 
             if (transcript.trim().isEmpty()) {
                 throw new IllegalStateException("转写结果为空");
@@ -84,14 +89,18 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
 
             String summary = aiSummaryService.generateSummary(transcript);
             video.setSummary(summary);
+            videoMapper.updateById(video);
+
+            List<VideoChapterVO> chapters = aiChapterService.generateChapters(transcript, segmentsJson, video.getDuration());
+            video.setChapters(objectMapper.writeValueAsString(chapters));
             video.setStatus(VideoStatusEnum.SUCCESS.getCode());
             video.setErrorMessage(null);
             videoMapper.updateById(video);
 
-            log.info("摘要生成成功: videoId={}, summaryLength={}", videoId, summary.length());
+            log.info("摘要和章节生成成功: videoId={}, summaryLength={}, chapterCount={}", videoId, summary.length(), chapters.size());
         } catch (Exception e) {
             log.error("转写或摘要生成失败: videoId={}", videoId, e);
-            updateFailed(video, "转写或摘要生成失败: " + e.getMessage());
+            updateFailed(video, "转写或 AI 内容生成失败: " + e.getMessage());
         }
     }
 

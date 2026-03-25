@@ -23,6 +23,8 @@ server:
   port: 8456
   servlet:
     context-path: /api
+    session:
+      timeout: 7d
 
 xiamu:
   storage:
@@ -31,12 +33,18 @@ xiamu:
     audio-path: ${xiamu.storage.root-path}/audios
     max-file-size: 2GB
     allowed-formats: mp4,avi,mkv,webm
+    cleanup-enabled: true
+    cleanup-cron: 0 0 * * * ?
+    video-retention-days: 7
+    audio-retention-hours: 24
   whisper:
     mode: local
     python-path: python
     script-path: scripts/whisper_openai.py
   ai:
     summary-max-chars: 12000
+    chapter-transcript-max-chars: 12000
+    chapter-segments-max-chars: 16000
 
 mybatis-plus:
   configuration:

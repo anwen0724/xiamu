@@ -31,3 +31,34 @@ CREATE TABLE `video` (
 -- add audioPath field to video table (第二步：音频提取)
 ALTER TABLE `video`
 ADD COLUMN `audioPath` VARCHAR(512) DEFAULT NULL COMMENT '音频文件路径' AFTER `url`;
+
+-- create user table
+CREATE TABLE IF NOT EXISTS `user` (
+    `id` BIGINT NOT NULL COMMENT '用户ID',
+    `userAccount` VARCHAR(64) NOT NULL COMMENT '用户账号',
+    `userPassword` VARCHAR(255) NOT NULL COMMENT '用户密码（加密）',
+    `userName` VARCHAR(128) NOT NULL COMMENT '用户名',
+    `createTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除/1已删除',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_userAccount` (`userAccount`),
+    KEY `idx_user_createTime` (`createTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
+
+-- create note table
+CREATE TABLE IF NOT EXISTS `note` (
+    `id` BIGINT NOT NULL COMMENT '笔记ID',
+    `userId` BIGINT NOT NULL COMMENT '用户ID',
+    `videoId` BIGINT NOT NULL COMMENT '视频ID',
+    `title` VARCHAR(100) NOT NULL COMMENT '笔记标题',
+    `content` TEXT NOT NULL COMMENT '笔记内容',
+    `timeSeconds` INT DEFAULT NULL COMMENT '关联视频时间点（秒）',
+    `createTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updateTime` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    `isDelete` TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除: 0未删除/1已删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_note_userId` (`userId`),
+    KEY `idx_note_videoId` (`videoId`),
+    KEY `idx_note_createTime` (`createTime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='笔记表';
