@@ -10,14 +10,17 @@ spring:
     multipart:
       max-file-size: 2GB
       max-request-size: 2GB
-  ai:
-    openai:
-      api-key: ${OPENAI_API_KEY:}
-      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
-      chat:
-        options:
-          model: ${OPENAI_MODEL:gpt-4.1-mini}
-          temperature: 0.3
+#  ai:
+#    chat:
+#      client:
+#        enabled: false
+#    openai:
+#      api-key: ${xiamu.ai.models.openai.api-key:}
+#      base-url: ${xiamu.ai.models.openai.base-url:https://api.openai.com}
+#      chat:
+#        options:
+#          model: ${xiamu.ai.models.openai.model:gpt-4.1-mini}
+#          temperature: ${xiamu.ai.models.openai.temperature:0.3}
 
 server:
   port: 8456
@@ -42,9 +45,27 @@ xiamu:
     python-path: python
     script-path: scripts/whisper_openai.py
   ai:
+    default-model: deepseek
+    summary-model: ${AI_SUMMARY_MODEL:}
+    chapter-model: ${AI_CHAPTER_MODEL:}
     summary-max-chars: 12000
     chapter-transcript-max-chars: 12000
     chapter-segments-max-chars: 16000
+    models:
+      openai:
+        enabled: true
+        provider: openai
+        api-key: ${OPENAI_API_KEY:}
+        base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+        model: ${OPENAI_MODEL:gpt-4o-mini}
+        temperature: 0.3
+      deepseek:
+        enabled: true
+        provider: deepseek
+        api-key: ${DEEPSEEK_API_KEY:sk-75b4c7f7ab2d4ad585373efcc6bba708}
+        base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+        model: ${DEEPSEEK_MODEL:deepseek-chat}
+        temperature: 0.3
 
 mybatis-plus:
   configuration:

@@ -91,16 +91,29 @@ public class WhisperTranscriptionServiceImpl implements WhisperTranscriptionServ
             video.setSummary(summary);
             videoMapper.updateById(video);
 
-            List<VideoChapterVO> chapters = aiChapterService.generateChapters(transcript, segmentsJson, video.getDuration());
+            List<VideoChapterVO> chapters = List.of();
+            boolean chapterGenerated = false;
+            try {
+                chapters = aiChapterService.generateChapters(transcript, segmentsJson, video.getDuration());
+                chapterGenerated = true;
+            } catch (Exception chapterException) {
+                log.warn("章节生成失败，降级为仅摘要成功状态: videoId={}, message={}",
+                        videoId, chapterException.getMessage(), chapterException);
+            }
+
             video.setChapters(objectMapper.writeValueAsString(chapters));
             video.setStatus(VideoStatusEnum.SUCCESS.getCode());
             video.setErrorMessage(null);
             videoMapper.updateById(video);
 
-            log.info("摘要和章节生成成功: videoId={}, summaryLength={}, chapterCount={}", videoId, summary.length(), chapters.size());
+            if (chapterGenerated) {
+                log.info("摘要和章节生成成功: videoId={}, summaryLength={}, chapterCount={}", videoId, summary.length(), chapters.size());
+            } else {
+                log.info("摘要生成成功，章节降级为空列表: videoId={}, summaryLength={}", videoId, summary.length());
+            }
         } catch (Exception e) {
             log.error("转写或摘要生成失败: videoId={}", videoId, e);
-            updateFailed(video, "转写或 AI 内容生成失败: " + e.getMessage());
+            updateFailed(video, "转写或AI 内容生成失败: " + e.getMessage());
         }
     }
 

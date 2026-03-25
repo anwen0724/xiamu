@@ -1,10 +1,12 @@
 package com.anwen.xiamubackend.ai.service.impl;
 
-import com.anwen.xiamubackend.ai.config.AiConfig;
+import com.anwen.xiamubackend.ai.config.AiProperties;
+import com.anwen.xiamubackend.ai.routing.AiModelRegistration;
+import com.anwen.xiamubackend.ai.routing.AiModelRouter;
+import com.anwen.xiamubackend.ai.routing.AiTaskType;
 import com.anwen.xiamubackend.ai.service.AiSummaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
 /**
@@ -26,17 +28,24 @@ public class AiSummaryServiceImpl implements AiSummaryService {
             5. 如果转写文本质量一般，也尽量提炼主要内容。
             """;
 
-    private final ChatClient.Builder chatClientBuilder;
-    private final AiConfig aiConfig;
+    private final AiProperties aiProperties;
+    private final AiModelRouter aiModelRouter;
 
     @Override
     public String generateSummary(String transcript) {
+        return generateSummary(transcript, null);
+    }
+
+    @Override
+    public String generateSummary(String transcript, String modelKey) {
         String normalizedTranscript = normalizeTranscript(transcript);
         String input = truncateTranscript(normalizedTranscript);
+        AiModelRegistration registration = aiModelRouter.route(AiTaskType.SUMMARY, modelKey);
 
-        log.info("开始调用 LLM 生成摘要，输入长度={}", input.length());
+        log.info("开始调用 LLM 生成摘要，输入长度={}, modelKey={}, provider={}, model={}",
+                input.length(), registration.key(), registration.provider(), registration.model());
 
-        String summary = chatClientBuilder.build()
+        String summary = registration.chatClient()
                 .prompt()
                 .system(SYSTEM_PROMPT)
                 .user("""
@@ -73,7 +82,7 @@ public class AiSummaryServiceImpl implements AiSummaryService {
     }
 
     private String truncateTranscript(String transcript) {
-        int maxChars = aiConfig.getSummaryMaxChars() == null ? 12000 : aiConfig.getSummaryMaxChars();
+        int maxChars = aiProperties.getSummaryMaxChars() == null ? 12000 : aiProperties.getSummaryMaxChars();
         if (transcript.length() <= maxChars) {
             return transcript;
         }

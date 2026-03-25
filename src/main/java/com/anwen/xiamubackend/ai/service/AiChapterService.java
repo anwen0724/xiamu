@@ -10,4 +10,6 @@ import java.util.List;
 public interface AiChapterService {
 
     List<VideoChapterVO> generateChapters(String transcript, String transcriptionJson, Long durationSeconds);
+
+    List<VideoChapterVO> generateChapters(String transcript, String transcriptionJson, Long durationSeconds, String modelKey);
 }
