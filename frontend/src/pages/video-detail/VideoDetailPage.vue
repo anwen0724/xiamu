@@ -376,7 +376,7 @@ function goBack() {
 </script>
 
 <template>
-  <AppLayout hide-hero compact title="" description="">
+  <AppLayout hide-hero compact wide title="" description="">
     <div class="detail-page">
       <section class="workspace-top panel">
         <div class="workspace-left">
@@ -804,7 +804,7 @@ function goBack() {
 
 .workspace-layout {
   display: grid;
-  grid-template-columns: minmax(620px, 0.92fr) minmax(720px, 1.08fr);
+  grid-template-columns: minmax(0, 0.44fr) minmax(0, 0.56fr);
   gap: 14px;
   align-items: start;
 }
@@ -1554,7 +1554,7 @@ function goBack() {
   color: var(--text-muted);
 }
 
-@media (max-width: 1380px) {
+@media (max-width: 1180px) {
   .workspace-layout {
     grid-template-columns: minmax(0, 1fr);
   }

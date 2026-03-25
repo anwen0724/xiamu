@@ -12,7 +12,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   --font-display: 'Source Han Serif SC', 'Songti SC', 'STSong', 'Noto Serif SC', serif;
-  --page-max-width: 1180px;
+  --page-max-width: 2580px;
   --surface: rgba(255, 252, 246, 0.82);
   --surface-strong: #fffaf1;
   --line: rgba(42, 56, 87, 0.14);

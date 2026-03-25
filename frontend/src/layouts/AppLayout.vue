@@ -13,11 +13,12 @@ defineProps<{
   navItems?: NavItem[]
   compact?: boolean
   hideHero?: boolean
+  wide?: boolean
 }>()
 </script>
 
 <template>
-  <div class="page-shell" :class="{ compact }">
+  <div class="page-shell">
     <header class="layout-header panel">
       <RouterLink class="brand-mark" to="/">智看视频</RouterLink>
 
@@ -76,6 +77,7 @@ defineProps<{
 .compact .hero {
   padding-bottom: 20px;
 }
+
 
 @media (max-width: 640px) {
   .layout-header {
