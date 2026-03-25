@@ -674,7 +674,7 @@ AI 分析视频内容，生成结构化摘要，帮助用户快速了解视频�
 
 | 层级 | 技术选型 |
 |------|---------|
-| 前端 | React / Vue（待确定）|
+| 前端 | Vue 3 + TypeScript + Vite |
 | 后端 | Java Spring Boot |
 | AI 集成 | Spring AI / LangChain4j |
 | 视频处理 | FFmpeg |
