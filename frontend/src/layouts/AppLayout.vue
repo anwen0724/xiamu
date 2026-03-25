@@ -12,15 +12,15 @@ defineProps<{
   eyebrow?: string
   navItems?: NavItem[]
   compact?: boolean
+  hideHero?: boolean
 }>()
 </script>
 
 <template>
   <div class="page-shell" :class="{ compact }">
     <header class="layout-header panel">
-      <div class="layout-brand">
-        <RouterLink class="brand-mark" to="/">智看视频</RouterLink>
-      </div>
+      <RouterLink class="brand-mark" to="/">智看视频</RouterLink>
+
       <nav v-if="navItems?.length" class="layout-nav">
         <RouterLink
           v-for="item in navItems"
@@ -33,7 +33,7 @@ defineProps<{
       </nav>
     </header>
 
-    <section class="hero">
+    <section v-if="!hideHero" class="hero">
       <p v-if="eyebrow" class="eyebrow">{{ eyebrow }}</p>
       <h1 class="page-title">{{ title }}</h1>
       <p class="page-desc">{{ description }}</p>
@@ -51,13 +51,14 @@ defineProps<{
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 18px;
+  padding: 16px 20px;
 }
 
 .brand-mark {
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: -0.03em;
 }
 
 .layout-nav {
@@ -68,8 +69,8 @@ defineProps<{
 
 .hero {
   display: grid;
-  gap: 12px;
-  padding: 40px 0 28px;
+  gap: 14px;
+  padding: 42px 0 30px;
 }
 
 .compact .hero {

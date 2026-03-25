@@ -1,21 +1,51 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import VideoUploadPanel from '../../components/upload/VideoUploadPanel.vue'
 import AppLayout from '../../layouts/AppLayout.vue'
+import type { EntityId } from '../../api/types'
+import { useDashboardVideosQuery } from '../../queries'
 import { useAuthStore } from '../../stores/auth'
+import { formatDuration, formatRelativeDate } from '../../utils'
 
 const navItems = [
   { label: '首页', to: '/' },
   { label: '上传', to: '/' },
-  { label: '结果页', to: '/video/result/1' },
 ]
 
 const router = useRouter()
 const authStore = useAuthStore()
+const selectedStatus = ref('')
+const videosQuery = useDashboardVideosQuery(selectedStatus)
+
+const statusOptions = [
+  { label: '全部状态', value: '' },
+  { label: '等待处理', value: 'WAITING' },
+  { label: '处理中', value: 'PROCESSING' },
+  { label: '处理完成', value: 'SUCCESS' },
+  { label: '处理失败', value: 'FAILED' },
+]
+
+const videoRecords = computed(() => videosQuery.data.value?.records ?? [])
+const dashboardLoading = computed(() => videosQuery.isLoading.value)
+const dashboardHasError = computed(() => videosQuery.isError.value)
+const dashboardErrorMessage = computed(
+  () => videosQuery.error.value?.message || '视频列表加载失败',
+)
 
 async function handleLogout() {
   await authStore.logout()
   await router.push('/')
+}
+
+function openVideo(item: { id: EntityId; status: string }) {
+  if (item.status === 'SUCCESS') {
+    void router.push(`/video/result/${item.id}`)
+    return
+  }
+
+  void router.push(`/video/status/${item.id}`)
 }
 </script>
 
@@ -23,7 +53,7 @@ async function handleLogout() {
   <AppLayout
     eyebrow="Dashboard"
     title="最近处理的视频"
-    description="这里会承接当前用户的视频列表、状态筛选和继续学习入口。"
+    description="这里承接当前用户的视频列表、状态筛选和继续学习入口。"
     :nav-items="navItems"
   >
     <section class="user-strip panel">
@@ -37,30 +67,63 @@ async function handleLogout() {
     <section class="dashboard-grid">
       <aside class="panel side-panel">
         <strong>快速入口</strong>
-        <a class="menu-item" href="#">最近处理</a>
-        <a class="menu-item" href="#">全部视频</a>
-        <a class="menu-item" href="#">我的笔记</a>
+        <button class="menu-item active" type="button">最近处理</button>
+        <button class="menu-item" type="button">全部视频</button>
+        <button class="menu-item" type="button">我的笔记</button>
       </aside>
-      <section class="panel list-panel">
-        <article class="video-card">
-          <div>
-            <h3>Python 入门教程</h3>
-            <p>2 小时 15 分钟 · SUCCESS · 3 天前</p>
+
+      <section class="content-column">
+        <VideoUploadPanel
+          title="上传新视频"
+          description="这里已经接入真实上传接口。上传成功后会自动跳到处理状态页。"
+          cta-label="选择视频并上传"
+        />
+
+        <section class="panel list-panel">
+          <div class="list-head">
+            <div>
+              <h2>最近处理的视频</h2>
+              <p>支持按状态筛选，优先回访已生成摘要与章节的内容。</p>
+            </div>
+
+            <select v-model="selectedStatus">
+              <option
+                v-for="option in statusOptions"
+                :key="option.value || 'all'"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </option>
+            </select>
           </div>
-          <div class="card-actions">
-            <a href="/video/result/1">查看结果</a>
-            <a href="/video/status/1">查看状态</a>
+
+          <p v-if="dashboardLoading" class="info-text">正在加载视频列表...</p>
+          <p v-else-if="dashboardHasError" class="error-text">{{ dashboardErrorMessage }}</p>
+          <div v-else-if="videoRecords.length" class="video-list">
+            <article
+              v-for="item in videoRecords"
+              :key="item.id"
+              class="video-card"
+            >
+              <div class="card-main">
+                <div class="status-tag" :data-status="item.status">{{ item.status }}</div>
+                <h3>{{ item.title }}</h3>
+                <p>{{ formatDuration(item.duration) }} · {{ formatRelativeDate(item.createTime) }}</p>
+                <p v-if="item.summary" class="summary-text">{{ item.summary }}</p>
+                <p v-else class="summary-placeholder">摘要尚未生成，先查看处理状态。</p>
+              </div>
+              <div class="card-actions">
+                <button type="button" @click="openVideo(item)">
+                  {{ item.status === 'SUCCESS' ? '查看结果' : '查看状态' }}
+                </button>
+              </div>
+            </article>
           </div>
-        </article>
-        <article class="video-card">
-          <div>
-            <h3>Vue 3 实战课程</h3>
-            <p>45 分钟 · PROCESSING · 20 分钟前</p>
+          <div v-else class="empty-box">
+            <strong>还没有可回访的视频</strong>
+            <p>先上传一个学习视频，处理完成后这里会显示你的历史记录。</p>
           </div>
-          <div class="card-actions">
-            <a href="/video/status/2">继续等待</a>
-          </div>
-        </article>
+        </section>
       </section>
     </section>
   </AppLayout>
@@ -96,6 +159,11 @@ async function handleLogout() {
   gap: 20px;
 }
 
+.content-column {
+  display: grid;
+  gap: 20px;
+}
+
 .side-panel,
 .list-panel {
   padding: 24px;
@@ -107,17 +175,52 @@ async function handleLogout() {
 }
 
 .menu-item {
+  text-align: left;
   padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
   border-radius: 12px;
   color: var(--text-muted);
 }
 
-.menu-item:hover {
+.menu-item:hover,
+.menu-item.active {
   background: rgba(31, 94, 255, 0.08);
   color: var(--text-main);
 }
 
 .list-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.list-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.list-head h2,
+.list-head p {
+  margin: 0;
+}
+
+.list-head p {
+  margin-top: 6px;
+  color: var(--text-muted);
+}
+
+.list-head select {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.video-list {
   display: grid;
   gap: 16px;
 }
@@ -132,6 +235,32 @@ async function handleLogout() {
   border: 1px solid var(--line);
 }
 
+.card-main {
+  display: grid;
+  gap: 6px;
+}
+
+.status-tag {
+  justify-self: start;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(31, 94, 255, 0.08);
+  color: var(--accent-strong);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-tag[data-status='FAILED'] {
+  background: rgba(208, 57, 57, 0.1);
+  color: #a02c2c;
+}
+
+.status-tag[data-status='PROCESSING'],
+.status-tag[data-status='WAITING'] {
+  background: rgba(243, 167, 0, 0.12);
+  color: #9d6a00;
+}
+
 .video-card h3 {
   margin: 0 0 6px;
 }
@@ -141,6 +270,14 @@ async function handleLogout() {
   color: var(--text-muted);
 }
 
+.summary-text {
+  max-width: 54ch;
+}
+
+.summary-placeholder {
+  color: #8f8290;
+}
+
 .card-actions {
   display: flex;
   flex-wrap: wrap;
@@ -148,9 +285,50 @@ async function handleLogout() {
   gap: 12px;
 }
 
+.card-actions button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+}
+
+.info-text,
+.error-text {
+  margin: 0;
+}
+
+.error-text {
+  color: #a02c2c;
+}
+
+.empty-box {
+  padding: 22px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid var(--line);
+}
+
+.empty-box strong,
+.empty-box p {
+  display: block;
+  margin: 0;
+}
+
+.empty-box p {
+  margin-top: 8px;
+  color: var(--text-muted);
+}
+
 @media (max-width: 900px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .list-head {
+    flex-direction: column;
   }
 }
 </style>
