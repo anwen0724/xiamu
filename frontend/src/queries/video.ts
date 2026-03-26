@@ -13,6 +13,7 @@ export function useDashboardVideosQuery(status: MaybeRefOrGetter<string>) {
         pageSize: 12,
         status: toValue(status) || undefined,
       }),
+    placeholderData: (previousData) => previousData,
     staleTime: 30_000,
     refetchOnWindowFocus: false,
     retry: false,
