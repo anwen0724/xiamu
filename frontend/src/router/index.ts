@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import DashboardPage from '../pages/dashboard/DashboardPage.vue'
 import HomePage from '../pages/home/HomePage.vue'
 import LoginPage from '../pages/auth/LoginPage.vue'
+import PlaceholderPage from '../pages/placeholder/PlaceholderPage.vue'
 import RegisterPage from '../pages/auth/RegisterPage.vue'
 import VideoDetailPage from '../pages/video-detail/VideoDetailPage.vue'
 import { pinia } from '../stores'
@@ -38,6 +39,11 @@ const router = createRouter({
       meta: {
         guestOnly: true,
       },
+    },
+    {
+      path: '/placeholder',
+      name: 'placeholder',
+      component: PlaceholderPage,
     },
     {
       path: '/dashboard',

@@ -1,12 +1,28 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { useRouter, RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+
+import '../../styles/auth-pages.css'
 
 import AppLayout from '../../layouts/AppLayout.vue'
 import { useAuthStore } from '../../stores/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+const centerNavItems = [
+  { label: '产品', to: { name: 'placeholder', query: { label: '产品' } } },
+  { label: '热门精选总结', to: { name: 'placeholder', query: { label: '热门精选总结' } }, hot: true },
+  { label: '安装插件', to: { name: 'placeholder', query: { label: '安装插件' } } },
+  { label: '价格', to: { name: 'placeholder', query: { label: '价格' } } },
+  { label: '常见问题', to: { name: 'placeholder', query: { label: '常见问题' } } },
+  { label: '博客', to: { name: 'placeholder', query: { label: '博客' } } },
+]
+
+const navItems = [
+  { label: '登录', to: '/login', kind: 'ghost' as const },
+  { label: '注册', to: '/register', kind: 'primary' as const },
+]
 
 const form = reactive({
   userAccount: '',
@@ -51,110 +67,64 @@ async function handleSubmit() {
 
 <template>
   <AppLayout
-    eyebrow="用户注册"
     title="创建一个新的学习账号"
-    description="首版只保留账号、用户名和密码字段，严格对齐当前后端注册接口。"
-    :compact="true"
+    description="注册后即可上传视频、生成结果并回访你的学习记录。"
+    :center-nav-items="centerNavItems"
+    locale-label="简体中文"
+    :nav-items="navItems"
+    :hide-hero="true"
+    compact
   >
-    <section class="panel auth-card">
-      <form class="auth-form" @submit.prevent="handleSubmit">
-        <p v-if="errorMessage" class="error-box">{{ errorMessage }}</p>
-        <p v-if="successMessage" class="success-box">{{ successMessage }}</p>
+    <section class="auth-page auth-page--register">
+      <section class="auth-card panel">
+        <div class="auth-card-head">
+          <h1>注册</h1>
+          <p class="auth-switch auth-switch--top">
+            已有账户？
+            <RouterLink to="/login">登录</RouterLink>
+          </p>
+        </div>
 
-      <div class="field">
-        <label>账号</label>
-          <input v-model="form.userAccount" placeholder="邮箱或手机号" />
-      </div>
-      <div class="field">
-        <label>用户名</label>
-          <input v-model="form.userName" placeholder="用于显示的名称" />
-      </div>
-      <div class="field">
-        <label>密码</label>
-          <input v-model="form.userPassword" type="password" placeholder="请输入密码" />
-      </div>
-      <div class="field">
-        <label>确认密码</label>
-          <input
-            v-model="form.checkPassword"
-            type="password"
-            placeholder="再次输入密码"
-          />
-      </div>
-        <button :disabled="submitDisabled" type="submit">
-          {{ authStore.pending ? '注册中...' : '注册' }}
-        </button>
-      </form>
+        <form class="auth-form" @submit.prevent="handleSubmit">
+          <p v-if="errorMessage" class="auth-feedback auth-feedback--error">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="auth-feedback auth-feedback--success">{{ successMessage }}</p>
 
-      <p class="switch-tip">
-        已有账号？
-        <RouterLink to="/login">去登录</RouterLink>
-      </p>
+          <label class="auth-field">
+            <span class="auth-field-label">账号</span>
+            <input v-model="form.userAccount" autocomplete="username" placeholder="邮箱或手机号" />
+          </label>
+
+          <label class="auth-field">
+            <span class="auth-field-label">用户名</span>
+            <input v-model="form.userName" autocomplete="nickname" placeholder="用于显示的名称" />
+          </label>
+
+          <label class="auth-field">
+            <span class="auth-field-label">密码</span>
+            <input
+              v-model="form.userPassword"
+              type="password"
+              autocomplete="new-password"
+              placeholder="请输入密码"
+            />
+          </label>
+
+          <label class="auth-field">
+            <span class="auth-field-label">确认密码</span>
+            <input
+              v-model="form.checkPassword"
+              type="password"
+              autocomplete="new-password"
+              placeholder="再次输入密码"
+            />
+          </label>
+
+          <button class="auth-submit" :disabled="submitDisabled" type="submit">
+            {{ authStore.pending ? '注册中...' : '注册' }}
+          </button>
+        </form>
+
+      </section>
     </section>
   </AppLayout>
 </template>
-
-<style scoped>
-.auth-card {
-  width: min(520px, 100%);
-  padding: 24px;
-}
-
-.auth-form {
-  display: grid;
-  gap: 4px;
-}
-
-.field {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-input,
-button {
-  min-height: 46px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  padding: 0 14px;
-  background: rgba(255, 255, 255, 0.9);
-}
-
-button {
-  background: var(--accent);
-  color: #fff;
-  border: 0;
-  cursor: pointer;
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
-.error-box,
-.success-box {
-  margin: 0 0 8px;
-  padding: 12px 14px;
-  border-radius: 14px;
-}
-
-.error-box {
-  background: rgba(208, 57, 57, 0.08);
-  color: #a02c2c;
-}
-
-.success-box {
-  background: rgba(48, 136, 84, 0.1);
-  color: #2e7d51;
-}
-
-.switch-tip {
-  margin: 18px 0 0;
-  color: var(--text-muted);
-}
-
-.switch-tip a {
-  color: var(--accent-strong);
-}
-</style>

@@ -13,14 +13,31 @@ const pending = ref(false)
 const selectedFileName = ref('')
 const errorMessage = ref('')
 
+const avatarLabel = computed(() => {
+  const seed = authStore.currentUser?.userName || authStore.currentUser?.userAccount || 'U'
+  return seed.trim().charAt(0).toUpperCase()
+})
+
+const centerNavItems = [
+  { label: '产品', to: { name: 'placeholder', query: { label: '产品' } } },
+  { label: '热门精选总结', to: { name: 'placeholder', query: { label: '热门精选总结' } }, hot: true },
+  { label: '安装插件', to: { name: 'placeholder', query: { label: '安装插件' } } },
+  { label: '价格', to: { name: 'placeholder', query: { label: '价格' } } },
+  { label: '常见问题', to: { name: 'placeholder', query: { label: '常见问题' } } },
+  { label: '博客', to: { name: 'placeholder', query: { label: '博客' } } },
+]
+
 const navItems = computed(() => {
   if (authStore.isLoggedIn) {
-    return [{ label: 'Dashboard', to: '/dashboard' }]
+    return [
+      { label: 'Workspace', to: '/dashboard', kind: 'workspace' as const, icon: '▣' },
+      { label: avatarLabel.value, to: '/dashboard', kind: 'avatar' as const },
+    ]
   }
 
   return [
-    { label: '登录', to: '/login' },
-    { label: '注册', to: '/register' },
+    { label: '登录', to: '/login', kind: 'ghost' as const },
+    { label: '注册', to: '/register', kind: 'primary' as const },
   ]
 })
 
@@ -87,6 +104,8 @@ async function onFileChange(event: Event) {
   <AppLayout
     title="AI 音视频转录与总结"
     description="上传学习视频并生成结构化结果。"
+    :center-nav-items="centerNavItems"
+    locale-label="简体中文"
     :nav-items="navItems"
     :hide-hero="true"
   >
@@ -101,10 +120,10 @@ async function onFileChange(event: Event) {
 
       <div class="hero-stage">
         <div class="upload-shell">
-          <button class="upload-input" type="button" @click="pickFile">
-            <span class="input-icon">🔗</span>
+          <button class="upload-input" :class="{ 'has-file': Boolean(selectedFileName) }" type="button" @click="pickFile">
+            <span class="input-icon">⭱</span>
             <span class="input-text">
-              {{ selectedFileName || '选择本地 MP4 学习视频文件...' }}
+              {{ selectedFileName || '选择本地 MP4 学习视频文件' }}
             </span>
           </button>
           <button class="upload-submit" type="button" :disabled="pending" @click="pickFile">
@@ -145,8 +164,8 @@ async function onFileChange(event: Event) {
 .home-landing {
   position: relative;
   display: grid;
-  gap: 28px;
-  padding: 152px 0 44px;
+  gap: 24px;
+  padding: 154px 0 72px;
   min-height: calc(100vh - 128px);
   align-content: start;
   overflow: hidden;
@@ -154,12 +173,12 @@ async function onFileChange(event: Event) {
 
 .hero-copy {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   justify-items: center;
   text-align: center;
   position: relative;
   z-index: 1;
-  margin-top: 10px;
+  animation: rise-in 0.6s ease both;
 }
 
 .hero-highlight {
@@ -172,10 +191,10 @@ async function onFileChange(event: Event) {
   align-items: center;
   justify-content: center;
   gap: 18px;
-  font-size: clamp(62px, 6.6vw, 96px);
+  font-size: clamp(52px, 5.3vw, 78px);
   font-weight: 900;
   line-height: 1.02;
-  letter-spacing: -0.08em;
+  letter-spacing: -0.07em;
   color: #12192d;
   text-align: center;
 }
@@ -186,9 +205,11 @@ async function onFileChange(event: Event) {
 }
 
 .hero-highlight {
-  font-size: clamp(34px, 3.3vw, 50px);
+  font-size: clamp(30px, 2.9vw, 44px);
   font-weight: 800;
-  color: var(--accent);
+  background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 62%, var(--accent-rose) 120%);
+  -webkit-background-clip: text;
+  color: transparent;
 }
 
 .hero-highlight span {
@@ -197,69 +218,105 @@ async function onFileChange(event: Event) {
 
 .hero-stage {
   position: relative;
-  width: min(1320px, 100%);
+  width: min(1160px, 100%);
   margin: 0 auto;
   display: grid;
-  gap: 26px;
+  gap: 16px;
   padding: 4px 0 0;
   z-index: 1;
+  animation: rise-in 0.75s ease both;
 }
 
 .upload-shell {
-  width: min(1120px, 100%);
+  width: min(920px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 170px;
-  gap: 12px;
-  padding: 14px;
-  border-radius: 36px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  box-shadow: 0 10px 24px rgba(41, 42, 77, 0.06);
-  backdrop-filter: blur(6px);
+  grid-template-columns: minmax(0, 1fr) 142px;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 14px 30px rgba(62, 46, 115, 0.045),
+    0 4px 10px rgba(62, 46, 115, 0.03);
+  backdrop-filter: blur(12px);
   position: relative;
   z-index: 1;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.upload-shell:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 18px 36px rgba(62, 46, 115, 0.06),
+    0 6px 14px rgba(62, 46, 115, 0.035);
+  border-color: rgba(143, 108, 255, 0.14);
 }
 
 .upload-input,
 .upload-submit {
-  min-height: 78px;
+  min-height: 60px;
   border: 0;
 }
 
 .upload-input {
   display: inline-flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   width: 100%;
-  padding: 0 24px;
-  border-radius: 26px;
-  background: rgba(247, 248, 252, 0.88);
+  padding: 0 20px;
+  border-radius: 22px;
+  background: rgba(250, 247, 255, 0.96);
   color: var(--text-muted);
   text-align: left;
   cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
 }
 
 .input-icon {
-  font-size: 20px;
-  opacity: 0.7;
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(143, 108, 255, 0.08);
+  color: var(--accent-strong);
+  font-size: 13px;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .input-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 19px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.upload-input.has-file {
+  color: #42435d;
 }
 
 .upload-submit {
-  border-radius: 26px;
-  background: linear-gradient(135deg, #7f61ff, #6a49ff);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #9a7aff, #7a54ff 68%, #ff8fbc 130%);
   color: #fff;
-  font-size: 30px;
+  font-size: 24px;
   font-weight: 800;
-  box-shadow: 0 10px 22px rgba(111, 88, 255, 0.2);
+  box-shadow: 0 10px 20px rgba(122, 84, 255, 0.18);
   cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
 }
 
 .upload-submit:disabled {
@@ -272,22 +329,35 @@ async function onFileChange(event: Event) {
   transform: translateY(-1px);
 }
 
+.upload-submit:hover {
+  box-shadow: 0 14px 24px rgba(122, 84, 255, 0.22);
+  filter: saturate(1.04);
+}
+
+.upload-input:focus-visible,
+.upload-submit:focus-visible,
+.inline-upload:focus-visible {
+  outline: 2px solid rgba(122, 84, 255, 0.26);
+  outline-offset: 2px;
+}
+
 .hero-sub-action {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   color: var(--text-muted);
-  font-size: 18px;
+  font-size: 15px;
   position: relative;
   z-index: 1;
+  margin-top: -2px;
 }
 
 .inline-upload {
   border: 0;
   background: transparent;
   color: var(--accent-strong);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -295,51 +365,82 @@ async function onFileChange(event: Event) {
 .feature-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 18px;
-  width: min(1220px, 100%);
+  gap: 14px;
+  width: min(920px, 100%);
   margin: 12px auto 0;
   position: relative;
   z-index: 1;
+  animation: rise-in 0.9s ease both;
 }
 
 .feature-card {
   display: grid;
   justify-items: center;
-  gap: 12px;
-  min-height: 186px;
-  padding: 28px 24px 24px;
+  gap: 10px;
+  grid-template-rows: auto auto 1fr;
+  min-height: 150px;
+  padding: 22px 18px 18px;
   text-align: center;
   border-radius: 24px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 12px 24px rgba(60, 48, 108, 0.028);
+  backdrop-filter: blur(10px);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 18px 32px rgba(60, 48, 108, 0.045);
   background: rgba(255, 255, 255, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.66);
-  box-shadow: 0 8px 18px rgba(38, 40, 70, 0.04);
-  backdrop-filter: blur(4px);
+  border-color: rgba(143, 108, 255, 0.16);
 }
 
 .feature-icon {
   display: inline-grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, #f1ecff, #eaf3ff);
-  font-size: 26px;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f4ebff, #fef6ff);
+  font-size: 19px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 8px 18px rgba(122, 84, 255, 0.08);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.feature-card:hover .feature-icon {
+  transform: translateY(-1px) scale(1.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 10px 20px rgba(122, 84, 255, 0.12);
 }
 
 .feature-icon[data-tone='blue'] {
-  background: linear-gradient(180deg, #dbe9ff, #c9d9ff);
+  background: linear-gradient(180deg, #ebe9ff, #dfe4ff);
 }
 
 .feature-icon[data-tone='pink'] {
-  background: linear-gradient(180deg, #fbe0f9, #f3d6ff);
+  background: linear-gradient(180deg, #ffe0f4, #f6ddff);
 }
 
 .feature-icon[data-tone='green'] {
-  background: linear-gradient(180deg, #dff8e7, #cff3d8);
+  background: linear-gradient(180deg, #e5f8ee, #d9f5e4);
 }
 
 .feature-icon[data-tone='peach'] {
-  background: linear-gradient(180deg, #ffe6dc, #ffd9f2);
+  background: linear-gradient(180deg, #ffe9df, #ffe1f2);
 }
 
 .feature-card h2,
@@ -348,13 +449,16 @@ async function onFileChange(event: Event) {
 }
 
 .feature-card h2 {
-  font-size: 22px;
+  font-size: 17px;
   font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .feature-card p {
   color: var(--text-muted);
-  font-size: 17px;
+  font-size: 14px;
+  line-height: 1.45;
+  max-width: 14ch;
 }
 
 .error-box {
@@ -370,6 +474,18 @@ async function onFileChange(event: Event) {
   display: none;
 }
 
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (max-width: 980px) {
   .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -379,7 +495,7 @@ async function onFileChange(event: Event) {
 @media (max-width: 720px) {
   .home-landing {
     gap: 20px;
-    padding-top: 88px;
+    padding-top: 92px;
     min-height: auto;
   }
 
@@ -393,21 +509,21 @@ async function onFileChange(event: Event) {
 
   .upload-shell {
     grid-template-columns: 1fr;
-    padding: 10px;
+    padding: 8px;
     border-radius: 28px;
   }
 
   .upload-input,
   .upload-submit {
-    min-height: 66px;
+    min-height: 58px;
   }
 
   .input-text {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .upload-submit {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .hero-sub-action {
@@ -417,11 +533,12 @@ async function onFileChange(event: Event) {
 
   .feature-grid {
     grid-template-columns: 1fr;
+    width: min(420px, 100%);
   }
 
   .feature-card {
-    min-height: 168px;
-    padding: 24px 20px;
+    min-height: 142px;
+    padding: 18px 16px;
   }
 
   .hero-title {

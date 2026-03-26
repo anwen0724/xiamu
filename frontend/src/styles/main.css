@@ -4,10 +4,9 @@
   font-weight: 400;
   color: #141b2d;
   background:
-    radial-gradient(circle at 50% 14%, rgba(132, 109, 255, 0.16), transparent 28%),
-    radial-gradient(circle at 14% 28%, rgba(122, 178, 255, 0.14), transparent 24%),
-    radial-gradient(circle at 86% 74%, rgba(181, 160, 255, 0.12), transparent 22%),
-    linear-gradient(180deg, #fafafe 0%, #f3f5fb 54%, #f7f8fd 100%);
+    radial-gradient(circle at -6% 18%, rgba(235, 220, 255, 0.3), transparent 26%),
+    radial-gradient(circle at 108% 72%, rgba(255, 223, 238, 0.28), transparent 28%),
+    linear-gradient(180deg, #fffdfd 0%, #faf7ff 52%, #fffafc 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -15,19 +14,20 @@
   --font-display: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
   --page-max-width: 1480px;
   --page-gutter: clamp(18px, 3vw, 38px);
-  --surface: rgba(255, 255, 255, 0.94);
+  --surface: rgba(255, 255, 255, 0.9);
   --surface-strong: #ffffff;
-  --surface-muted: #f6f7fb;
-  --line: rgba(112, 118, 141, 0.16);
-  --line-strong: rgba(112, 118, 141, 0.24);
+  --surface-muted: #fcf8ff;
+  --line: rgba(145, 136, 176, 0.16);
+  --line-strong: rgba(145, 136, 176, 0.24);
   --text-main: #141b2d;
-  --text-muted: #667085;
-  --text-soft: #95a0b5;
-  --accent: #705cff;
-  --accent-strong: #5f46f6;
-  --accent-soft: #efeafe;
-  --accent-wash: #f6f3ff;
-  --shadow: 0 24px 52px rgba(26, 31, 55, 0.08);
+  --text-muted: #6f7088;
+  --text-soft: #aaa5bc;
+  --accent: #8f6cff;
+  --accent-strong: #754dff;
+  --accent-soft: #f4efff;
+  --accent-wash: #fdfaff;
+  --accent-rose: #ff8eb6;
+  --shadow: 0 24px 52px rgba(38, 30, 75, 0.07);
 }
 
 * {
@@ -101,7 +101,7 @@ a {
 }
 
 .nav-link {
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 999px;
   color: var(--text-muted);
   border: 1px solid transparent;
@@ -115,7 +115,7 @@ a {
 
 .nav-link:hover {
   background: var(--accent-wash);
-  border-color: rgba(112, 92, 255, 0.1);
+  border-color: rgba(143, 108, 255, 0.08);
   color: var(--text-main);
   transform: translateY(-1px);
 }
