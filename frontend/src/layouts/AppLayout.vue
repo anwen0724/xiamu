@@ -18,9 +18,15 @@ defineProps<{
 </script>
 
 <template>
-  <div class="page-shell">
-    <header class="layout-header panel">
-      <RouterLink class="brand-mark" to="/">智看视频</RouterLink>
+  <div class="page-shell" :class="{ compact, wide }">
+    <header class="layout-header">
+      <RouterLink class="brand-mark" to="/">
+        <span class="brand-badge">ZK</span>
+        <span class="brand-copy">
+          <strong>智看视频</strong>
+          <small>AI Video Learning</small>
+        </span>
+      </RouterLink>
 
       <nav v-if="navItems?.length" class="layout-nav">
         <RouterLink
@@ -40,7 +46,7 @@ defineProps<{
       <p class="page-desc">{{ description }}</p>
     </section>
 
-    <main>
+    <main class="layout-main">
       <slot />
     </main>
   </div>
@@ -48,41 +54,108 @@ defineProps<{
 
 <style scoped>
 .layout-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 16px 20px;
+  gap: 20px;
+  width: 100%;
+  margin: 0;
+  padding: 16px var(--page-gutter);
+  border-radius: 0 0 20px 20px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  box-shadow: 0 5px 14px rgba(34, 35, 66, 0.015);
+  backdrop-filter: blur(10px);
 }
 
 .brand-mark {
-  font-family: var(--font-display);
-  font-size: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, var(--accent), var(--accent-strong));
+  color: #ffffff;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: 0.08em;
+  box-shadow: 0 12px 24px rgba(111, 88, 255, 0.18);
+}
+
+.brand-copy {
+  display: grid;
+  gap: 2px;
+}
+
+.brand-copy strong {
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.05em;
+}
+
+.brand-copy small {
+  color: var(--text-soft);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .layout-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
+}
+
+.nav-link {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.layout-main,
+.hero {
+  width: min(var(--page-max-width), calc(100vw - (var(--page-gutter) * 2)));
+  margin: 0 auto;
+}
+
+.layout-main {
+  padding-top: 22px;
 }
 
 .hero {
   display: grid;
   gap: 14px;
-  padding: 42px 0 30px;
+  padding: 28px 0 12px;
 }
 
 .compact .hero {
   padding-bottom: 20px;
 }
 
-
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .layout-header {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 14px 16px;
+  }
+
+  .layout-nav {
+    gap: 8px;
+  }
+
+  .brand-copy small {
+    display: none;
+  }
+
+  .layout-main {
+    padding-top: 20px;
   }
 }
 </style>

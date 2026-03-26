@@ -69,23 +69,50 @@ async function onFileChange(event: Event) {
 
 <template>
   <article :class="panelClassName">
-    <div class="copy">
-      <p class="panel-kicker">上传工作台</p>
-      <h2>{{ title }}</h2>
-      <p>{{ description }}</p>
+    <div class="panel-head">
+      <div class="copy">
+        <p class="panel-kicker">Upload Workspace</p>
+        <h2>{{ title }}</h2>
+        <p>{{ description }}</p>
+      </div>
+
+      <div class="status-pill">
+        <strong>真实链路</strong>
+        <span>上传后跳转到 /video/:id</span>
+      </div>
     </div>
 
     <div class="dropzone" @click="pickFile">
       <div class="dropzone-meta">
-        <span class="dropzone-chip">MP4</span>
-        <span class="dropzone-chip muted">详情页实时展示处理进度</span>
+        <span class="dropzone-chip">本地 MP4</span>
+        <span class="dropzone-chip muted">状态页持续展示处理进度</span>
       </div>
-      <span class="dropzone-label">拖拽 MP4 文件到此处</span>
-      <span class="dropzone-tip">或点击选择本地视频文件</span>
+      <span class="dropzone-label">选择一个学习视频开始处理</span>
+      <span class="dropzone-tip">
+        适用于课程录屏、教程讲解、知识分享。上传完成后自动进入详情页查看摘要、章节和笔记入口。
+      </span>
       <span v-if="selectedFileName" class="file-name">{{ selectedFileName }}</span>
       <button class="select-btn" type="button" :disabled="pending">
         {{ buttonLabel }}
       </button>
+    </div>
+
+    <div class="workflow-grid">
+      <div class="workflow-card">
+        <span>01</span>
+        <strong>上传视频</strong>
+        <p>只保留当前已支持的本地上传流程。</p>
+      </div>
+      <div class="workflow-card">
+        <span>02</span>
+        <strong>等待处理</strong>
+        <p>统一详情页展示状态、进度和异常信息。</p>
+      </div>
+      <div class="workflow-card">
+        <span>03</span>
+        <strong>阅读结果</strong>
+        <p>处理完成后查看摘要、章节和转写内容。</p>
+      </div>
     </div>
 
     <p v-if="errorMessage" class="error-box">{{ errorMessage }}</p>
@@ -104,24 +131,31 @@ async function onFileChange(event: Event) {
 .upload-panel {
   display: grid;
   gap: 18px;
-  padding: 26px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 28px;
   background:
-    linear-gradient(180deg, rgba(255, 252, 246, 0.9), rgba(255, 255, 255, 0.78)),
-    radial-gradient(circle at top left, rgba(31, 94, 255, 0.1), transparent 30%);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 247, 0.96)),
+    radial-gradient(circle at top right, rgba(47, 127, 109, 0.08), transparent 32%);
+  box-shadow: 0 24px 54px rgba(17, 24, 21, 0.08);
 }
 
 .upload-panel.landing {
-  padding: 30px;
-  min-height: 520px;
+  min-height: 100%;
   align-content: start;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 246, 0.96), rgba(255, 255, 255, 0.88)),
-    radial-gradient(circle at top left, rgba(31, 94, 255, 0.14), transparent 34%);
+}
+
+.panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .copy {
   display: grid;
   gap: 8px;
+  max-width: 440px;
 }
 
 .panel-kicker {
@@ -138,33 +172,51 @@ async function onFileChange(event: Event) {
 }
 
 .copy h2 {
-  font-family: var(--font-display);
-  font-size: clamp(28px, 3vw, 36px);
-  line-height: 1.06;
+  font-size: clamp(28px, 3vw, 34px);
+  line-height: 1.12;
   letter-spacing: -0.03em;
 }
 
 .copy p {
   color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.status-pill {
+  min-width: 156px;
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(47, 127, 109, 0.14);
+  background: var(--accent-wash);
+}
+
+.status-pill strong,
+.status-pill span {
+  margin: 0;
+}
+
+.status-pill strong {
+  font-size: 13px;
+}
+
+.status-pill span {
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .dropzone {
   min-height: 260px;
   display: grid;
   place-items: center;
-  gap: 10px;
-  padding: 24px;
-  border-radius: 28px;
-  border: 1px dashed rgba(31, 94, 255, 0.34);
+  gap: 14px;
+  padding: 28px;
+  border-radius: 24px;
+  border: 1px dashed rgba(47, 127, 109, 0.32);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(241, 246, 255, 0.74)),
-    repeating-linear-gradient(
-      -45deg,
-      rgba(31, 94, 255, 0.04),
-      rgba(31, 94, 255, 0.04) 12px,
-      transparent 12px,
-      transparent 24px
-    );
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 248, 246, 0.98)),
+    radial-gradient(circle at top, rgba(47, 127, 109, 0.08), transparent 46%);
   text-align: center;
   cursor: pointer;
   transition:
@@ -175,8 +227,8 @@ async function onFileChange(event: Event) {
 
 .dropzone:hover {
   transform: translateY(-2px);
-  border-color: rgba(31, 94, 255, 0.46);
-  box-shadow: 0 20px 36px rgba(31, 94, 255, 0.08);
+  border-color: rgba(47, 127, 109, 0.48);
+  box-shadow: 0 18px 34px rgba(47, 127, 109, 0.1);
 }
 
 .dropzone-meta {
@@ -189,8 +241,8 @@ async function onFileChange(event: Event) {
 .dropzone-chip {
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(31, 94, 255, 0.14);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(47, 127, 109, 0.14);
   color: var(--accent-strong);
   font-size: 12px;
   letter-spacing: 0.08em;
@@ -201,13 +253,17 @@ async function onFileChange(event: Event) {
 }
 
 .dropzone-label {
-  font-size: 26px;
+  max-width: 12ch;
+  font-size: clamp(26px, 4vw, 34px);
   font-weight: 700;
-  line-height: 1.12;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
 }
 
 .dropzone-tip {
+  max-width: 46ch;
   color: var(--text-muted);
+  line-height: 1.7;
 }
 
 .file-name {
@@ -216,26 +272,65 @@ async function onFileChange(event: Event) {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.82);
   color: var(--accent-strong);
+  border: 1px solid rgba(47, 127, 109, 0.14);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .select-btn {
-  margin-top: 8px;
-  min-height: 46px;
-  padding: 0 20px;
+  margin-top: 6px;
+  min-height: 48px;
+  padding: 0 24px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #1e58ea, #275dff 58%, #4b79ff);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
   color: #fff;
-  box-shadow: 0 16px 28px rgba(31, 94, 255, 0.2);
+  box-shadow: 0 16px 28px rgba(47, 127, 109, 0.22);
   cursor: pointer;
 }
 
 .select-btn:disabled {
   cursor: not-allowed;
   opacity: 0.7;
+}
+
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.workflow-card {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.workflow-card span,
+.workflow-card strong,
+.workflow-card p {
+  margin: 0;
+}
+
+.workflow-card span {
+  color: var(--accent-strong);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.workflow-card strong {
+  font-size: 15px;
+}
+
+.workflow-card p {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .error-box {
@@ -248,5 +343,20 @@ async function onFileChange(event: Event) {
 
 .hidden-input {
   display: none;
+}
+
+@media (max-width: 720px) {
+  .panel-head,
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-head {
+    display: grid;
+  }
+
+  .status-pill {
+    min-width: 0;
+  }
 }
 </style>
