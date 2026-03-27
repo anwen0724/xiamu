@@ -17,9 +17,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -82,6 +85,34 @@ class WhisperTranscriptionServiceImplTests {
             verify(videoProcessStateService).updateProcessingStage(eq(1L), eq(VideoProcessStageEnum.GENERATING_SUMMARY), any());
             verify(videoProcessStateService).updateProcessingStage(eq(1L), eq(VideoProcessStageEnum.GENERATING_CHAPTERS), any());
             verify(videoProcessStateService).markSuccess(eq(1L), any());
+        } finally {
+            Files.deleteIfExists(audioFile);
+        }
+    }
+
+    @Test
+    void transcribeAsyncShouldUseApiStrategyWhenModeIsApi() throws Exception {
+        Path audioFile = Files.createTempFile("xiamu-audio-api", ".mp3");
+
+        try {
+            ReflectionTestUtils.setField(whisperTranscriptionService, "mode", "api");
+
+            Video video = new Video();
+            video.setId(2L);
+            video.setDuration(45L);
+
+            when(videoMapper.selectById(2L)).thenReturn(video);
+            when(apiCallStrategy.transcribe(audioFile.toString())).thenReturn("""
+                    {"text":"接口转写结果","language":"zh","segments":[]}
+                    """);
+            when(aiSummaryService.generateSummary("接口转写结果")).thenReturn("接口摘要");
+            when(aiChapterService.generateChapters("接口转写结果", "[]", 45L)).thenReturn(List.of());
+
+            whisperTranscriptionService.transcribeAsync(2L, audioFile.toString());
+
+            verify(apiCallStrategy).transcribe(audioFile.toString());
+            verify(localModelStrategy, never()).transcribe(anyString());
+            verify(videoProcessStateService).markSuccess(eq(2L), any());
         } finally {
             Files.deleteIfExists(audioFile);
         }

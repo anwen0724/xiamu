@@ -41,9 +41,16 @@ xiamu:
     video-retention-days: 7
     audio-retention-hours: 24
   whisper:
+    # local: 调用本地 Python Whisper 脚本；api: 调用 OpenAI-compatible 远程转写接口
     mode: local
+    # local 模式使用
     python-path: python
     script-path: scripts/whisper_openai.py
+    # api 模式使用，建议通过环境变量注入
+    api-key: ${WHISPER_API_KEY:}
+    base-url: ${WHISPER_BASE_URL:https://api.openai.com}
+    api-model: ${WHISPER_API_MODEL:whisper-1}
+    api-timeout-seconds: 180
   ai:
     default-model: deepseek
     summary-model: ${AI_SUMMARY_MODEL:}
